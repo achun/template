@@ -41,5 +41,9 @@ import "github.com/achun/template"
 
 您应该发现`Template`的接口尽量和官方包一致, 所以使用方法和官方包是完全一致的.
 
-在 `Parse` 或 `ParseFiles` 之前调用 `Builtin()`建模板函数才会生效.
+在 `Parse` 或 `ParseFiles` 之前调用 `Builtin()` 内建模板函数才会生效.
 
+
+License
+=======
+template is licensed under the BSD
