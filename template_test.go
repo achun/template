@@ -18,14 +18,14 @@ func TestErrEmpty(T *testing.T) {
 }
 
 func TestBuiltin(T *testing.T) {
-	tpl, err := template.New("name").Builtin().Parse(`
+	tpl, err := template.New("").Builtin().Parse(`
 		{{print data}}
 		{{getBaseDir}} -> {{setBaseDir "testdata"}}{{getBaseDir}}
-		{{exists data "foo"}}
-		{{import "file1.tmpl" "file2.tmpl" "tmpl1.tmpl" "tmpl2.tmpl"}}
-		{{"\n"}}`)
+		{{if exists data "foo"|not}}not exists "foo"{{end}}
+		{{import "tmpl1.tmpl" "tmpl2.tmpl"}}
+		{{template "tmpl1.tmpl"}}{{"\n"}}`)
 	if err == nil {
-		err = tpl.Execute(os.Stdout, "so easy")
+		err = tpl.Execute(os.Stdout, "import so easy")
 	}
 	if err != nil {
 		T.Fatal(err)

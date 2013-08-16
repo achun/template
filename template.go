@@ -298,23 +298,25 @@ func (t *Template) BuiltinFuncs() map[string]interface{} {
 			return t.tpl.(*text.Template)
 		}
 		// import wrapper for ParseFiles
-		mp["import"] = func(filenames ...string) string {
+		mp["import"] = func(filenames ...string) (string, error) {
 			Abs(t.baseDir, filenames)
-			if len(filenames) != 0 {
-				t.tpl.(*text.Template).ParseFiles(filenames...)
+			if len(filenames) == 0 {
+				return "", errors.New(ErrEmpty)
 			}
-			return ""
+			_, err := t.tpl.(*text.Template).ParseFiles(filenames...)
+			return "", err
 		}
 	case "html":
 		mp["tpl"] = func() *html.Template {
 			return t.tpl.(*html.Template)
 		}
-		mp["import"] = func(filenames ...string) string {
+		mp["import"] = func(filenames ...string) (string, error) {
 			Abs(t.baseDir, filenames)
-			if len(filenames) != 0 {
-				t.tpl.(*html.Template).ParseFiles(filenames...)
+			if len(filenames) == 0 {
+				return "", errors.New(ErrEmpty)
 			}
-			return ""
+			_, err := t.tpl.(*html.Template).ParseFiles(filenames...)
+			return "", err
 		}
 	}
 	return mp
