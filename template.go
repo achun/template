@@ -17,6 +17,9 @@ const (
 	ErrNever = "template: Never"
 )
 
+// FuncsMap is global argument for Funcs(FuncsMap) on New/NewHtml function
+var FuncsMap = map[string]interface{}{}
+
 type Template struct {
 	tpl     interface{}
 	typ     string
@@ -35,13 +38,13 @@ func Must(t *Template, err error) *Template {
 
 func New(name string) *Template {
 	tmpl := &Template{typ: "text"}
-	tmpl.tpl = text.New(name)
+	tmpl.tpl = text.New(name).Funcs(FuncsMap)
 	return tmpl
 }
 
 func NewHtml(name string) *Template {
 	tmpl := &Template{typ: "html"}
-	tmpl.tpl = html.New(name)
+	tmpl.tpl = html.New(name).Funcs(FuncsMap)
 	return tmpl
 }
 func (t *Template) clone() *Template {
