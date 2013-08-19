@@ -43,6 +43,69 @@ import "github.com/achun/template"
 
 在 `Parse` 或 `ParseFiles` 之前调用 `Builtin()` 内建模板函数才会生效.
 
+几句代码演示使用方法
+
+```go
+tpl := template.New("") // 是的不需要名字, tpl 其实是个集合, 官方的也是集合. 自动匹配到第一个有效的模板很容易实现.
+tpl.Bultin() // 先执行这一句那些内建模板函数才会生效, 如果您需要那些内建模板函数的话.
+content := "get.tmpl" // 这里示意定义一个 content 模板文件的名字
+// 用闭包的方法加入您自己的FuncMap
+tpl.Funcs(map[string]interface{}{
+	"request": func() *http.Request { //
+		return r // 这个就是是客户端发起 *http.Request, 提供这个只是一个演示, 说明这种方法完全可用
+	},
+	"content": func() string { // 用函数的方法运行输出 get.tmpl
+		err := tpl.ExecuteTemplate(w, content, dat) // w 就是http.ResponseWriter了
+		if err != nil {
+			return err.Error()
+		}
+		return ""
+	},
+})
+// 事实上我们只需要这两个文件既可, 其余的文件可以在模板中用import加载
+tpl.ParseFiles("layout.html", "install/get.tmpl")
+// 万事俱备, 执行
+tpl.Execute(w, "your data")
+```
+
+layout.html的样子
+
+```html
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <!-- 这样写只是表示 request 函数是可用的 -->
+    <title>{{request.URL.Path}}</title>
+    <link rel="stylesheet" href="/css/pure.css">
+    <link rel="stylesheet" href="/css/default.css">
+</head>
+
+<body>
+<!-- 哈, content 用函数的方法完成是不是更优雅呢 -->
+{{content}} 
+</body>
+<script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/md5.js"></script>
+<script src="/js/common.js"></script>
+
+</html>
+```
+
+get.tmpl
+
+```html
+<h1>这里您随意吧<h1>
+<!-- import 另一个模板 -->
+{{import "foo.tmpl"}}
+<!--
+执行仍然是标准语法
+data是个内建函数, 返回的是原始传入的模板数据
+模板嵌套多次时,可以用data获取最原始的传入值
+-->
+{{template "foo.tmpl" data}}
+```
 
 License
 =======
