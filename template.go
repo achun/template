@@ -17,16 +17,17 @@ const (
 	ErrNever = "template: Never"
 )
 
-// FuncsMap is global argument for Funcs(FuncsMap) on New/NewHtml function
+// FuncsMap is global variable for Funcs(FuncsMap) on New/NewHtml function
 var FuncsMap = map[string]interface{}{}
 
 type Template struct {
-	tpl     interface{}
-	typ     string
-	parsed  bool
-	w       io.Writer
-	data    interface{}
-	baseDir string
+	tpl       interface{}
+	typ       string
+	parsed    bool
+	w         io.Writer
+	data      interface{}
+	baseDir   string
+	firstName string
 }
 
 func Must(t *Template, err error) *Template {
@@ -49,14 +50,21 @@ func NewHtml(name string) *Template {
 }
 func (t *Template) clone() *Template {
 	return &Template{
-		tpl:     t.tpl,
-		typ:     t.typ,
-		parsed:  t.parsed,
-		w:       t.w,
-		data:    t.data,
-		baseDir: t.baseDir,
+		tpl:       t.tpl,
+		typ:       t.typ,
+		parsed:    t.parsed,
+		w:         t.w,
+		data:      t.data,
+		baseDir:   t.baseDir,
+		firstName: t.firstName,
 	}
 }
+func (t *Template) setFirstName(name string) {
+	if t.firstName == "" {
+		t.firstName = filepath.Base(name)
+	}
+}
+
 func (t *Template) AddParseTree(name string, tree *parse.Tree) (*Template, error) {
 	var err error
 	switch t.typ {
@@ -66,6 +74,7 @@ func (t *Template) AddParseTree(name string, tree *parse.Tree) (*Template, error
 		_, err = t.tpl.(*html.Template).AddParseTree(name, tree)
 	}
 	if err == nil {
+		t.setFirstName(name)
 		return t, nil
 	}
 	return nil, err
@@ -103,11 +112,10 @@ func (t *Template) Execute(wr io.Writer, data interface{}) (err error) {
 		if t.parsed {
 			err = tpl.Execute(wr, data)
 		} else {
-			tpls := tpl.Templates()
-			if len(tpls) == 0 {
+			if t.firstName == "" {
 				err = errors.New(ErrEmpty)
 			} else {
-				err = tpl.ExecuteTemplate(wr, tpls[0].Name(), data)
+				err = tpl.ExecuteTemplate(wr, t.firstName, data)
 			}
 		}
 	case "html":
@@ -115,11 +123,10 @@ func (t *Template) Execute(wr io.Writer, data interface{}) (err error) {
 		if t.parsed {
 			err = tpl.Execute(wr, data)
 		} else {
-			tpls := tpl.Templates()
-			if len(tpls) < 2 {
+			if t.firstName == "" {
 				err = errors.New(ErrEmpty)
 			} else {
-				err = tpl.ExecuteTemplate(wr, tpls[1].Name(), data)
+				err = tpl.ExecuteTemplate(wr, t.firstName, data)
 			}
 		}
 	}
@@ -204,6 +211,7 @@ func (t *Template) ParseFiles(filenames ...string) (*Template, error) {
 	if err != nil {
 		return nil, err
 	}
+	t.setFirstName(filenames[0])
 	return t, nil
 }
 
