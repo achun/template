@@ -46,6 +46,7 @@ import "github.com/achun/template"
 几句代码演示使用方法
 
 ```go
+dat := "your data" // 这只是示意, 现实中的数据由您决定
 tpl := template.New("") // 是的不需要名字, tpl 其实是个集合, 官方的也是集合. 自动匹配到第一个有效的模板很容易实现.
 tpl.Bultin() // 先执行这一句那些内建模板函数才会生效, 如果您需要那些内建模板函数的话.
 content := "get.tmpl" // 这里示意定义一个 content 模板文件的名字
@@ -55,7 +56,7 @@ tpl.Funcs(map[string]interface{}{
 		return r // 这个就是是客户端发起 *http.Request, 提供这个只是一个演示, 说明这种方法完全可用
 	},
 	"content": func() string { // 用函数的方法运行输出 get.tmpl
-		err := tpl.ExecuteTemplate(w, content, dat) // w 就是http.ResponseWriter了
+		err := tpl.ExecuteTemplate(w, content, dat) // w 就是http.ResponseWriter了, 传递最初的dat
 		if err != nil {
 			return err.Error()
 		}
@@ -65,7 +66,7 @@ tpl.Funcs(map[string]interface{}{
 // 事实上我们只需要这两个文件既可, 其余的文件可以在模板中用import加载
 tpl.ParseFiles("layout.html", "install/get.tmpl")
 // 万事俱备, 执行
-tpl.Execute(w, "your data")
+tpl.Execute(w, dat)
 ```
 
 layout.html的样子
