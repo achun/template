@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	ErrEmpty = "template: Templates() is empty"
-	ErrNever = "template: Never"
+	ErrEmpty  = "template: Templates() is empty"
+	ErrNever  = "template: Never"
+	ErrChRoot = "template: Can not chroot"
 )
 
 // FuncsMap is global variable for Funcs(FuncsMap) on New/NewHtml function
@@ -28,6 +29,7 @@ type Template struct {
 	data      interface{}
 	baseDir   string
 	firstName string
+	chroot    string
 }
 
 func Must(t *Template, err error) *Template {
@@ -202,6 +204,13 @@ func (t *Template) Parse(src string) (*Template, error) {
 
 func (t *Template) ParseFiles(filenames ...string) (*Template, error) {
 	var err error
+	Abs(t.baseDir, filenames)
+	if len(filenames) == 0 {
+		return nil, errors.New(ErrEmpty)
+	}
+	if !t.canChRoot(filenames) {
+		return nil, errors.New(ErrChRoot)
+	}
 	switch t.typ {
 	case "text":
 		_, err = t.tpl.(*text.Template).ParseFiles(filenames...)
@@ -314,6 +323,9 @@ func (t *Template) BuiltinFuncs() map[string]interface{} {
 			if len(filenames) == 0 {
 				return "", errors.New(ErrEmpty)
 			}
+			if !t.canChRoot(filenames) {
+				return "", errors.New(ErrChRoot)
+			}
 			_, err := t.tpl.(*text.Template).ParseFiles(filenames...)
 			return "", err
 		}
@@ -326,17 +338,30 @@ func (t *Template) BuiltinFuncs() map[string]interface{} {
 			if len(filenames) == 0 {
 				return "", errors.New(ErrEmpty)
 			}
+			if !t.canChRoot(filenames) {
+				return "", errors.New(ErrChRoot)
+			}
 			_, err := t.tpl.(*html.Template).ParseFiles(filenames...)
 			return "", err
 		}
 	}
 	return mp
 }
+func (t *Template) canChRoot(filenames []string) bool {
+	if t.chroot != "" {
+		for _, filename := range filenames {
+			if len(filename) < len(t.chroot) || filename[0:len(t.chroot)] != t.chroot {
+				return false
+			}
+		}
+	}
+	return true
+}
 
 // BaseDir setting the base directory path for template files
 func (t *Template) BaseDir(dir string) *Template {
-	t.baseDir = dir
 	if dir == "" {
+		t.baseDir = dir
 		return t
 	}
 	dir, err := filepath.Abs(dir)
@@ -344,6 +369,20 @@ func (t *Template) BaseDir(dir string) *Template {
 		return t
 	}
 	t.baseDir = dir + string(filepath.Separator)
+	return t
+}
+
+//ChRoot setting the root directory path for template files
+func (t *Template) ChRoot(dir string) *Template {
+	if dir == "" {
+		t.chroot = dir
+		return t
+	}
+	dir, err := filepath.Abs(dir)
+	if err != nil {
+		return t
+	}
+	t.chroot = dir + string(filepath.Separator)
 	return t
 }
 

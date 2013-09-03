@@ -22,6 +22,7 @@
 * (*Template) BuiltinFuncs() // 返回内建模板函数.
 * (*Template) Builtin() // 使内建模板函数在模板执行期生效.
 * (*Template) BaseDir(dir string) // 为要解析的模板文件设置 base directory.
+* (*Template) ChRoot(dir string)  // 为模板文件设置 chroot. 请注意平台差异. 默认为空不限制.
 * Abs(basedir string, filenames []string) // 以 basedir 为基础, 转变 filenames 到绝对路径.
 
 内建模板函数
