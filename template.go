@@ -59,24 +59,24 @@ type executor interface {
 }
 
 /**
-Tree 对 parse.Tree 进行包装, 包含 Kind 信息.
+kindTree 对 parse.Tree 进行包装, 包含 Kind 信息.
 */
-type Tree struct {
+type kindTree struct {
 	*parse.Tree
 	Kind
 }
 
 /**
-Copy 返回一份 Tree 的拷贝.
+Copy 返回一份 kindTree 的拷贝.
 */
-func (t Tree) Copy() Tree {
+func (t kindTree) Copy() kindTree {
 
 	var tree *parse.Tree
 	if t.Tree != nil {
 		tree = t.Tree.Copy()
 	}
 
-	return Tree{
+	return kindTree{
 		Tree: tree,
 		Kind: t.Kind,
 	}
@@ -85,7 +85,7 @@ func (t Tree) Copy() Tree {
 /**
 Dir 返回 ParseName 所属的目录.
 */
-func (t Tree) Dir() string {
+func (t kindTree) Dir() string {
 	if t.Tree == nil {
 		return ""
 	}
@@ -95,7 +95,7 @@ func (t Tree) Dir() string {
 /**
 IsValid 返回 t 是否有效.
 */
-func (t Tree) IsValid() bool {
+func (t kindTree) IsValid() bool {
 	return (t.Kind == TEXT || t.Kind == HTML) &&
 		t.Tree != nil && t.Tree.Name != "" && t.Tree.ParseName != ""
 }
@@ -103,7 +103,7 @@ func (t Tree) IsValid() bool {
 /**
 Name 返回 t.Tree.Name, 如果 t.Tree 为 nil, 返回 "".
 */
-func (t Tree) Name() string {
+func (t kindTree) Name() string {
 	if t.Tree == nil {
 		return ""
 	}
@@ -113,7 +113,7 @@ func (t Tree) Name() string {
 /**
 ParseName 返回 t.Tree.ParseName, 如果 t.Tree 为 nil, 返回 "".
 */
-func (t Tree) ParseName() string {
+func (t kindTree) ParseName() string {
 	if t.Tree == nil {
 		return ""
 	}
@@ -126,7 +126,7 @@ base 维护 Template 的基础数据. 包括: rootdir, Tree, FuncMap.
 */
 type base struct {
 	rootdir string
-	trees   map[string]Tree
+	trees   map[string]kindTree
 	funcs   FuncMap
 }
 
@@ -138,7 +138,7 @@ newBase 新建 base 对象.
 func newBase(rootdir string) *base {
 	c := &base{
 		rootdir: rootdir,
-		trees:   make(map[string]Tree),
+		trees:   make(map[string]kindTree),
 		funcs:   make(FuncMap),
 	}
 	return c
@@ -150,7 +150,7 @@ Tree 是已经处理好的, name 要有 rootdir 前缀.
 返回:
 	失败返回错误信息, 成功返回 nil.
 */
-func (b *base) AddTree(tree Tree) error {
+func (b *base) AddTree(tree kindTree) error {
 
 	if !tree.IsValid() {
 		return fmt.Errorf("template: invalid Tree from base.AddTree.")
@@ -185,7 +185,7 @@ Copy 返回一份 *base 的拷贝.
 */
 func (b *base) Copy() *base {
 
-	trees := make(map[string]Tree)
+	trees := make(map[string]kindTree)
 
 	for name, tree := range b.trees {
 		trees[name] = tree.Copy()
@@ -213,9 +213,9 @@ func (b *base) Funcs(funcMap FuncMap) {
 }
 
 /**
-Lookup 返回 name 对应的 Tree. 需要使用者判断 Tree 是否有效.
+Lookup 返回 name 对应的 kindTree. 需要使用者判断 kindTree 是否有效.
 */
-func (b *base) Lookup(name string) Tree {
+func (b *base) Lookup(name string) kindTree {
 	return b.trees[name]
 }
 
@@ -227,7 +227,7 @@ func (b *base) RootDir() string {
 }
 
 /**
-Template 基于 base 实现模板.
+Template.
 */
 type Template struct {
 	base       *base
@@ -391,7 +391,7 @@ func (t *Template) AddParseTree(
 
 	var e executor
 
-	err := t.base.AddTree(Tree{
+	err := t.base.AddTree(kindTree{
 		Tree: tree,
 		Kind: kind,
 	})
